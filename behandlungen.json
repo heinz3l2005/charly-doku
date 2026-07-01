@@ -4,6 +4,7 @@
   "materialien": {
     "anaesthetikum": [
       { "name": "Ubistesin", "standard": true },
+      { "name": "Ubistesin forte" },
       { "name": "Ultracain D-S" },
       { "name": "Septanest" }
     ],

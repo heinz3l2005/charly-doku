@@ -188,10 +188,15 @@
   </div>
 
   <div class="card">
-    <h3 style="display:flex;align-items:center;gap:8px">
-      <input type="checkbox" id="cp" checked style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
-      7. Cp - indirekte Ueberkappung
-    </h3>
+    <h3 style="margin-bottom:6px">7. Ueberkappung</h3>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px">
+      <label class="check">
+        <input type="checkbox" id="cp" checked class="ueberkappung-excl" data-typ="ind" /> Indirekt (Cp)
+      </label>
+      <label class="check">
+        <input type="checkbox" id="dp" class="ueberkappung-excl" data-typ="dir" /> Direkt (Dp)
+      </label>
+    </div>
     <label>Material</label>
     <select id="cp_mat"></select>
   </div>
@@ -224,7 +229,7 @@
 
   <div class="card">
     <h3>11. Freitext</h3>
-    <textarea id="weitere" rows="2" placeholder="z. B. 45: Sk beseitigt. Beh. ueberempfindl. Zahnflaeche."></textarea>
+    <textarea id="weitere" rows="2"></textarea>
   </div>
 
 </div>
@@ -445,7 +450,7 @@ function formatFuellungLine(f) {
 
 function anaesthesieSatz(art, kiefer, mittel) {
   if (art === "none") return "";
-  return `**Anaesthesie ${art} ${kiefer} (${mittel}).** `;
+  return `Anaesthesie ${art} ${kiefer} (**${mittel}**). `;
 }
 
 function render() {
@@ -457,6 +462,7 @@ function render() {
   const kav_ungunst = $("#kav_ungunst").checked;
   const exc1 = $("#exc1").checked;
   const cp = $("#cp").checked;
+  const dp = $("#dp").checked;
   const cp_mat = $("#cp_mat").value;
   const komposit = $("#komposit").value;
   const adhaesiv = $("#adhaesiv").value;
@@ -490,8 +496,9 @@ function render() {
   // Gingiva-Exzision
   if (exc1) zeile += "Gingiva-Exzision. ";
 
-  // Cp
-  if (cp) zeile += `Ind. Ueberkappung (**Cp**) mit **${cp_mat}**. `;
+  // Ueberkappung: indirekt (Cp) ODER direkt (Dp) - beides gleichzeitig nicht sinnvoll.
+  if (cp) zeile += `Ind. Ueberkappung (Cp) mit **${cp_mat}**. `;
+  else if (dp) zeile += `Dir. Ueberkappung (Dp) mit **${cp_mat}**. `;
 
   // Isolation
   if (isolation.length > 0) {
@@ -507,7 +514,7 @@ function render() {
   }
 
   // Adhaesivtechnik-Zeile (nur wenn Komposit-Fuellung, was hier immer der Fall ist)
-  zeile += `\nAdhaesivtechnik (**${adhaesiv}**), Komposit **${komposit}**, **${farbe}**.`;
+  zeile += `\nAdhaesivtechnik (**${adhaesiv}**), Komposit **${komposit}**, **Vita ${farbe}**.`;
 
   parts.push(zeile);
 
@@ -598,6 +605,14 @@ $("#copyHtml").addEventListener("click", async () => {
 document.addEventListener("change", (e) => {
   if (e.target.matches("#isolation_slots input[type=checkbox]")) {
     e.target.closest("label").classList.toggle("on", e.target.checked);
+  }
+  // Ueberkappung: nur eine der beiden Optionen (indirekt/direkt) darf aktiv sein.
+  if (e.target.matches(".ueberkappung-excl")) {
+    if (e.target.checked) {
+      document.querySelectorAll(".ueberkappung-excl").forEach(cb => {
+        if (cb !== e.target) cb.checked = false;
+      });
+    }
   }
 });
 </script>
