@@ -67,6 +67,67 @@ TmpOut   := A_Temp "\charly_doku.txt"
 }
 
 ; --------------------------------------------------------------------
+; Hotkey Strg+Alt+B: nimmt Markdown-Text mit **fett** aus der Zwischenablage,
+; konvertiert zu RTF und schreibt RTF + Klartext (ohne Marker) in die Zwischenablage.
+; So kann charly's Rich-Edit-Feld (das nur RTF, nicht HTML versteht) die Fett-Formatierung
+; beim Einfuegen uebernehmen.
+;
+; Workflow:
+;   1. In der Web-App /baustein oder / "Fuer charly kopieren (** Marker)" klicken.
+;   2. Strg+Alt+B druecken.
+;   3. In charly Strg+V.
+^!b:: {
+    plain := A_Clipboard
+    if (Trim(plain) = "") {
+        MsgBox("Zwischenablage ist leer.", "charly-doku RTF-Konvertierung", 48)
+        return
+    }
+    rtf := MarkdownToRtf(plain)
+    plainClean := RegExReplace(plain, "\*\*(.+?)\*\*", "$1")
+    SetRtfClipboard(rtf, plainClean)
+    ToolTip("charly-doku: als RTF konvertiert. Jetzt Strg+V in charly.")
+    SetTimer () => ToolTip(), -2500
+}
+
+; --------------------------------------------------------------------
+; Markdown -> RTF (nur **fett** und Zeilenumbrueche)
+MarkdownToRtf(md) {
+    text := md
+    ; Reihenfolge wichtig: erst RTF-Sonderzeichen escapen, dann **fett** umsetzen.
+    text := StrReplace(text, "\", "\\")
+    text := StrReplace(text, "{", "\{")
+    text := StrReplace(text, "}", "\}")
+    ; **fett** -> {\b fett}
+    text := RegExReplace(text, "\*\*(.+?)\*\*", "{\b $1}")
+    ; Zeilenumbrueche -> \par
+    text := StrReplace(text, "`r`n", "`n")
+    text := StrReplace(text, "`n", "\par`r`n")
+    return "{\rtf1\ansi\ansicpg1252\deff0\deflang1031{\fonttbl{\f0\fnil Segoe UI;}}\fs20 " . text . "}"
+}
+
+; RTF in Windows-Zwischenablage (CF_RTF) via PowerShell schreiben, plainText als CF_UNICODETEXT.
+SetRtfClipboard(rtf, plainText) {
+    tmpRtf := A_Temp "\charly_doku_rtf.rtf"
+    tmpTxt := A_Temp "\charly_doku_rtf.txt"
+    if FileExist(tmpRtf)
+        FileDelete(tmpRtf)
+    if FileExist(tmpTxt)
+        FileDelete(tmpTxt)
+    FileAppend(rtf, tmpRtf, "UTF-8")
+    FileAppend(plainText, tmpTxt, "UTF-8")
+    ps := "$r = Get-Content -Raw -Encoding UTF8 '" tmpRtf "';"
+        . "$t = Get-Content -Raw -Encoding UTF8 '" tmpTxt "';"
+        . "Add-Type -AssemblyName System.Windows.Forms;"
+        . "$do = New-Object System.Windows.Forms.DataObject;"
+        . "$do.SetData('Rich Text Format', $r);"
+        . "$do.SetData([System.Windows.Forms.DataFormats]::UnicodeText, $t);"
+        . "[System.Windows.Forms.Clipboard]::SetDataObject($do, $true);"
+    RunWait('powershell -NoProfile -STA -WindowStyle Hidden -Command "' ps '"', , "Hide")
+    FileDelete(tmpRtf)
+    FileDelete(tmpTxt)
+}
+
+; --------------------------------------------------------------------
 ; Markdown -> HTML (nur Fett **x**, Kursiv *x*, Zeilenumbrueche)
 MarkdownToHtml(md) {
     s := md

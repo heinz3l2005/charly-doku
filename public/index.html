@@ -112,8 +112,12 @@
   <label>Karteitext (Markdown-Fett wird beim Kopieren als HTML uebertragen)</label>
   <div id="result"></div>
   <div class="actions">
-    <button id="copyPlain" class="secondary">Klartext kopieren</button>
-    <button id="copyHtml">Formatiert kopieren (HTML)</button>
+    <button id="copyCharly">Fuer charly kopieren (** Marker)</button>
+    <button id="copyHtml" class="secondary">HTML kopieren</button>
+    <button id="copyPlain" class="secondary">Klartext (ohne Marker)</button>
+  </div>
+  <div class="status" style="color:var(--muted);font-size:12px;margin-top:6px">
+    charly-Workflow: <b>"Fuer charly kopieren"</b> &rarr; <b>Strg+Alt+B</b> (charly-doku.ahk muss laufen) &rarr; in charly <b>Strg+V</b>.
   </div>
   <div class="status" id="copyStatus"></div>
 </div>
@@ -324,6 +328,7 @@ $("#resetBtn").addEventListener("click", () => {
 
 let RESULT_PLAIN = "";
 let RESULT_HTML = "";
+let RESULT_MD = "";
 
 function markdownToHtml(md) {
   let s = md.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -334,6 +339,7 @@ function markdownToHtml(md) {
 }
 
 function renderResult(text) {
+  RESULT_MD = text;
   RESULT_PLAIN = text.replace(/\*\*/g, "");
   RESULT_HTML = markdownToHtml(text);
   $("#result").innerHTML = RESULT_HTML;
@@ -341,10 +347,21 @@ function renderResult(text) {
   $("#copyStatus").textContent = "";
 }
 
+$("#copyCharly").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(RESULT_MD);
+    $("#copyStatus").textContent = "Markdown mit ** Markern kopiert. Jetzt Strg+Alt+B druecken, dann in charly Strg+V.";
+    $("#copyStatus").className = "status ok";
+  } catch (e) {
+    $("#copyStatus").textContent = "Kopieren fehlgeschlagen: " + e.message;
+    $("#copyStatus").className = "status err";
+  }
+});
+
 $("#copyPlain").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(RESULT_PLAIN);
-    $("#copyStatus").textContent = "Klartext kopiert.";
+    $("#copyStatus").textContent = "Klartext (ohne Marker) kopiert.";
     $("#copyStatus").className = "status ok";
   } catch (e) {
     $("#copyStatus").textContent = "Kopieren fehlgeschlagen: " + e.message;
