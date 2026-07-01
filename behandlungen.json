@@ -1,0 +1,165 @@
+{
+  "_hinweis": "Zentrale Datei: oben der Materialkatalog (jedes Produkt einmal, eines je Kategorie mit standard:true), unten die Behandlungen, die darauf verweisen. Produktnamen mit 'BITTE EINTRAGEN' durch deine echten Materialien ersetzen.",
+
+  "materialien": {
+    "anaesthetikum": [
+      { "name": "Ubistesin", "standard": true },
+      { "name": "Ultracain D-S" },
+      { "name": "Septanest" }
+    ],
+    "komposit": [
+      { "name": "G-aenial Universal", "standard": true },
+      { "name": "Tetric EvoCeram" },
+      { "name": "Filtek Supreme XTE" },
+      { "name": "Ceram.x Spectra" }
+    ],
+    "adhaesiv": [
+      { "name": "OptiBond FL", "standard": true },
+      { "name": "Scotchbond Universal" }
+    ],
+    "ueberkappung": [
+      { "name": "Vivaglass Liner", "standard": true },
+      { "name": "Ca(OH)2 (Dycal)" },
+      { "name": "Biodentine" },
+      { "name": "ProRoot MTA" }
+    ],
+    "matrize": [
+      { "name": "Kofferdam + Teilmatrize", "standard": true },
+      { "name": "Ringmatrize (z. B. Palodent V3)" },
+      { "name": "Zirkulaermatrize (Tofflemire)" }
+    ],
+    "retraktionsfaden": [
+      { "name": "Ultrapak Faden Gr. 0", "standard": true },
+      { "name": "Ultrapak Faden Gr. 00" },
+      { "name": "Ultrapak Faden Gr. 1" }
+    ],
+    "gingivaformer": [
+      { "name": "Camlog Gingivaformer 4.3 x 4 mm", "standard": true },
+      { "name": "Camlog Gingivaformer 3.8 x 4 mm" },
+      { "name": "Camlog Gingivaformer 5.0 x 4 mm" }
+    ],
+    "nahtmaterial": [
+      { "name": "Resolon 4-0", "standard": true },
+      { "name": "Prolene 5-0" },
+      { "name": "Seralene 5-0" },
+      { "name": "Vicryl 4-0 (resorbierbar)" }
+    ],
+    "spuelloesung": [
+      { "name": "CHX 0.2%", "standard": true },
+      { "name": "NaCl 0.9%" },
+      { "name": "H2O2 3%" }
+    ],
+    "abformmaterial": [
+      { "name": "Impregum", "standard": true },
+      { "name": "Aquasil" },
+      { "name": "Flexitime" },
+      { "name": "Alginat" }
+    ],
+    "prov_zement": [
+      { "name": "TempBond", "standard": true },
+      { "name": "TempBond NE (eugenolfrei)" },
+      { "name": "Freegenol" },
+      { "name": "Provicol" }
+    ],
+    "fluoridlack": [
+      { "name": "Duraphat", "standard": true },
+      { "name": "Fluor Protector" },
+      { "name": "Bifluorid 12" }
+    ]
+  },
+
+  "behandlungen": {
+    "fuellung": {
+      "bezeichnung": "Fuellungstherapie (adhaesiv, Komposit)",
+      "erkennung": {
+        "goz": ["2080", "2100", "2030"],
+        "bema": ["13a", "13b", "13c", "13d"],
+        "kuerzel": ["f1k", "f2adh", "f3adh", "bmf", "bmfsep", "cp"]
+      },
+      "material_slots": [
+        { "kategorie": "anaesthetikum", "frage": "Anaesthetikum?", "nur_wenn_kuerzel": ["l1uk", "ubi", "ana", "inf"] },
+        { "kategorie": "komposit", "frage": "Welches Komposit?" },
+        { "kategorie": "adhaesiv", "frage": "Welches Adhaesiv / Bonding?" },
+        { "kategorie": "ueberkappung", "frage": "Ueberkappungsmaterial?", "nur_wenn_kuerzel": ["cp"] },
+        { "kategorie": "matrize", "frage": "Matrize / Hilfsmittel?", "optional": true },
+        { "kategorie": "retraktionsfaden", "frage": "Retraktionsfaden (zervikale Fuellung)?", "optional": true }
+      ],
+      "farbe_abfragen": true,
+      "vorlage": "{{datum}}\n\n{{zahn}}: {{anaesthesie_satz}}Exkavation, Praeparation{{schwierigkeit}}. {{ueberkappung_satz}}{{isolation}}.\nAdhaesivtechnik ({{adhaesiv}}), Komposit {{komposit}}, Farbe {{farbe}}.\n{{fuellungen}}\nKontrolle o.B.\n{{weitere_zaehne}}\n{{behandler}}"
+    },
+
+    "implantat_prothetik": {
+      "bezeichnung": "Implantatprothetik - Abformung / Aufbauwechsel (Vorlage, bitte pruefen)",
+      "erkennung": {
+        "goz": ["2290", "9050", "5170", "0065"],
+        "bema": [],
+        "kuerzel": []
+      },
+      "material_slots": [
+        { "kategorie": "anaesthetikum", "frage": "Anaesthetikum?", "optional": true }
+      ],
+      "farbe_abfragen": false,
+      "vorlage": "{{datum}}\n\n{{platzhalter}}\n{{behandler}}"
+    },
+
+    "freilegung": {
+      "bezeichnung": "Implantatfreilegung (Stage 2) mit Gingivaformer",
+      "erkennung": {
+        "goz": ["9040"],
+        "bema": [],
+        "kuerzel": ["cam_ging"]
+      },
+      "material_slots": [
+        { "kategorie": "anaesthetikum", "frage": "Anaesthetikum?" },
+        { "kategorie": "gingivaformer", "frage": "Welcher Gingivaformer (Groesse)?" },
+        { "kategorie": "nahtmaterial", "frage": "Nahtmaterial?" },
+        { "kategorie": "spuelloesung", "frage": "Spuelloesung?", "optional": true }
+      ],
+      "farbe_abfragen": false,
+      "vorlage": "{{datum}}\n\n**{{zahn}}:** Beratung + symptombez. Unters. **LA {{anaesthetikum}} (Infiltration).** Aseptische Vorbereitung. **Freilegung Implantat {{zahn}}** via **{{technik}}**{{schwierigkeit}}. Einbringen **{{gingivaformer}}.** Wundverschluss EKN mit **{{nahtmaterial}}.** **{{spuelloesung}}-Spuelung.** Postop-Aufklaerung (Kuehlung, Schonung, weiche Kost, Mundhygiene). **NE nach {{ne_tage}} Tagen.**\n\n{{behandler}}"
+    },
+
+    "fu3": {
+      "bezeichnung": "Frueherkennungsuntersuchung FU3 (21.-33. Lm, Kind)",
+      "erkennung": {
+        "goz": [],
+        "bema": ["FU3", "FU1c"],
+        "kuerzel": ["fu3", "fu1c"]
+      },
+      "material_slots": [
+        { "kategorie": "fluoridlack", "frage": "Fluoridlack (FU Pr)?", "optional": true }
+      ],
+      "farbe_abfragen": false,
+      "vorlage": "{{datum}}\n\n**FU3 (Kind, 21.-33. Lm):** Anamnese {{anamnese}}. Milchzahnstatus {{status}}. **MH {{mh}}**, {{gingivitis}}. **Kariesrisiko {{risiko}}.** Ernaehrung {{ernaehrung}}, {{habits}}. **Elternberatung:** Putztechnik (KAI), Zuckerreduktion, Fluoridzufuhr. {{fluoridlack_satz}}**Recall {{recall}} Monate.**\n\n{{behandler}}"
+    },
+
+    "nachpraeparation": {
+      "bezeichnung": "Nachpraeparation Krone/Bruecke mit erneuter Abformung",
+      "erkennung": {
+        "goz": ["5170", "2270", "2280", "2260"],
+        "bema": [],
+        "kuerzel": ["nachpraep", "reprep"]
+      },
+      "material_slots": [
+        { "kategorie": "anaesthetikum", "frage": "Anaesthetikum?", "optional": true },
+        { "kategorie": "retraktionsfaden", "frage": "Retraktionsfaden?" },
+        { "kategorie": "abformmaterial", "frage": "Abformmaterial?" },
+        { "kategorie": "prov_zement", "frage": "Provisorischer Zement?" }
+      ],
+      "farbe_abfragen": false,
+      "vorlage": "{{datum}}\n\n**{{zaehne}}:** Sens.+. **LA {{anaesthetikum}} (Infiltration {{kiefer}}).** Prov entfernt. **Retr.faden {{retraktionsfaden}}** gelegt. **Nachpraeparation {{zaehne}}.** **Erneute Abformung {{abformmaterial}}.** Prov mit **{{prov_zement}}** wdbf.\n\n{{behandler}}"
+    },
+
+    "endo": {
+      "bezeichnung": "Endodontie (Vorlage, bitte befuellen)",
+      "erkennung": {
+        "goz": ["2360", "2380", "2390", "2410"],
+        "bema": [],
+        "kuerzel": []
+      },
+      "material_slots": [],
+      "farbe_abfragen": false,
+      "vorlage": "{{datum}}\n\n{{platzhalter}}\n{{behandler}}"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "charly-doku",
+  "version": "1.0.0",
+  "description": "charly Karteitext-Assistent (Vercel-Deployment)",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "vercel dev",
+    "deploy": "vercel deploy --prod"
+  }
+}

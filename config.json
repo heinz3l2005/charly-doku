@@ -1,0 +1,9 @@
+{
+  "behandler_standard": "M. Graf",
+  "farbe_standard": "A3",
+  "vita_farben": ["A1", "A2", "A3", "A3.5", "A4", "B1", "B2", "B3", "C2", "D3"],
+  "charge_dokumentieren": false,
+  "datumsformat": "TT.MM.JJJJ",
+  "sprache": "de",
+  "modell": "claude-opus-4-8"
+}

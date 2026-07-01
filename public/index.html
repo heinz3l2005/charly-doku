@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>charly-doku</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-hover: #0ea5e9;
+    --danger: #f87171;
+    --ok: #34d399;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+  }
+  h1 { margin: 0 0 16px; font-size: 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; margin-bottom: 16px;
+  }
+  #drop {
+    border: 2px dashed var(--border); border-radius: 8px; padding: 32px;
+    text-align: center; cursor: pointer; transition: all .15s;
+  }
+  #drop.drag { border-color: var(--accent); background: rgba(56,189,248,.06); }
+  #drop p { margin: 6px 0; color: var(--muted); }
+  #drop strong { color: var(--text); }
+  #preview img { max-width: 100%; border-radius: 4px; margin-top: 8px; }
+  label { display: block; margin: 8px 0 4px; color: var(--muted); font-size: 13px; }
+  select, input[type=text], textarea {
+    width: 100%; background: #0b1220; color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; font: inherit;
+  }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  button {
+    background: var(--accent); color: #001a2b; border: none;
+    padding: 10px 18px; border-radius: 6px; cursor: pointer;
+    font: inherit; font-weight: 600;
+  }
+  button:hover:not(:disabled) { background: var(--accent-hover); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .status { color: var(--muted); font-size: 13px; margin: 8px 0; }
+  .status.err { color: var(--danger); }
+  .status.ok { color: var(--ok); }
+  #result {
+    background: #0b1220; border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; white-space: pre-wrap; font-family: ui-monospace, monospace;
+    font-size: 13px; min-height: 60px;
+  }
+  #result b, #result strong { color: var(--accent); }
+  .actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<h1>charly-doku · Karteitext-Assistent</h1>
+
+<div class="card">
+  <div id="drop">
+    <p><strong>Screenshot einfuegen (Strg+V)</strong> oder Datei waehlen</p>
+    <p>Nur Leistungszeilen - <em>kein Patientenkopf</em>.</p>
+    <input type="file" id="file" accept="image/*" style="margin-top:8px" />
+    <div id="preview"></div>
+  </div>
+  <div class="status" id="uploadStatus"></div>
+</div>
+
+<div class="card hidden" id="stepBehandlung">
+  <label>Behandlung</label>
+  <select id="behandlung"></select>
+  <div id="materialSlots"></div>
+  <div class="row">
+    <div>
+      <label>Vita-Farbe</label>
+      <select id="farbe"></select>
+    </div>
+    <div>
+      <label>Postop-Tag (falls Kontrolle)</label>
+      <select id="postop">
+        <option value="">-</option>
+        <option>1. postop. Tag</option>
+        <option>3. postop. Tag</option>
+        <option>7. postop. Tag</option>
+        <option>10. postop. Tag</option>
+        <option>individuell</option>
+      </select>
+    </div>
+  </div>
+  <label>Zusaetzliche Angaben / Freitext</label>
+  <textarea id="extra" rows="2" placeholder="z.B. 'F1 v ist nicht zervikal', spezifische Groesse, Bemerkungen"></textarea>
+  <div class="actions">
+    <button id="renderBtn">Karteitext erzeugen</button>
+    <button id="resetBtn" class="secondary">Zuruecksetzen</button>
+  </div>
+  <div class="status" id="renderStatus"></div>
+</div>
+
+<div class="card hidden" id="stepResult">
+  <label>Karteitext (Markdown-Fett wird beim Kopieren als HTML uebertragen)</label>
+  <div id="result"></div>
+  <div class="actions">
+    <button id="copyPlain" class="secondary">Klartext kopieren</button>
+    <button id="copyHtml">Formatiert kopieren (HTML)</button>
+  </div>
+  <div class="status" id="copyStatus"></div>
+</div>
+
+<script>
+let CFG = null;      // {behandlungen, config, kuerzel}
+let IMG64 = null;    // base64-Payload ohne data:-Prefix
+let IMG_MIME = "image/png";
+
+const $ = (sel) => document.querySelector(sel);
+const drop = $("#drop");
+const fileInput = $("#file");
+const uploadStatus = $("#uploadStatus");
+
+async function loadConfig() {
+  const r = await fetch("/api/config");
+  if (!r.ok) { uploadStatus.textContent = "Config-Endpoint nicht erreichbar."; uploadStatus.className="status err"; return; }
+  CFG = await r.json();
+  populateBehandlungen();
+  populateFarben();
+}
+loadConfig();
+
+function populateBehandlungen() {
+  const sel = $("#behandlung");
+  sel.innerHTML = "";
+  for (const [key, b] of Object.entries(CFG.behandlungen.behandlungen)) {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = b.bezeichnung || key;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener("change", populateMaterialSlots);
+  populateMaterialSlots();
+}
+
+function populateFarben() {
+  const sel = $("#farbe");
+  sel.innerHTML = "";
+  const optNone = document.createElement("option");
+  optNone.value = "";
+  optNone.textContent = "- keine Farbe -";
+  sel.appendChild(optNone);
+  for (const f of CFG.config.vita_farben) {
+    const opt = document.createElement("option");
+    opt.value = f;
+    opt.textContent = f;
+    if (f === CFG.config.farbe_standard) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function populateMaterialSlots() {
+  const key = $("#behandlung").value;
+  const beh = CFG.behandlungen.behandlungen[key];
+  const container = $("#materialSlots");
+  container.innerHTML = "";
+  if (!beh || !beh.material_slots) return;
+  for (const slot of beh.material_slots) {
+    const wrap = document.createElement("div");
+    const lbl = document.createElement("label");
+    lbl.textContent = slot.frage + (slot.optional ? " (optional)" : "");
+    const sel = document.createElement("select");
+    sel.dataset.slot = slot.kategorie;
+    if (slot.optional) {
+      const o = document.createElement("option");
+      o.value = ""; o.textContent = "- nicht verwendet -";
+      sel.appendChild(o);
+    }
+    const kat = CFG.behandlungen.materialien[slot.kategorie] || [];
+    for (const m of kat) {
+      const o = document.createElement("option");
+      o.value = m.name;
+      o.textContent = m.name + (m.standard ? " (Standard)" : "");
+      if (m.standard) o.selected = true;
+      sel.appendChild(o);
+    }
+    wrap.appendChild(lbl);
+    wrap.appendChild(sel);
+    container.appendChild(wrap);
+  }
+}
+
+// --- Upload-Handling ---
+function setImage(dataUrl, mime) {
+  IMG_MIME = mime || "image/png";
+  IMG64 = dataUrl.split(",")[1];
+  $("#preview").innerHTML = `<img src="${dataUrl}" alt="Screenshot"/>`;
+  uploadStatus.textContent = "Bild geladen · Behandlung und Materialien pruefen, dann 'Karteitext erzeugen'.";
+  uploadStatus.className = "status ok";
+  $("#stepBehandlung").classList.remove("hidden");
+  // optional: /api/extract-Aufruf fuer Vorschlag der Behandlung
+  extractAndPreselect();
+}
+
+async function extractAndPreselect() {
+  try {
+    uploadStatus.textContent = "Klassifiziere Screenshot ...";
+    uploadStatus.className = "status";
+    const r = await fetch("/api/extract", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ image: IMG64, mediaType: IMG_MIME }),
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const info = await r.json();
+    if (info.behandlung && CFG.behandlungen.behandlungen[info.behandlung]) {
+      $("#behandlung").value = info.behandlung;
+      populateMaterialSlots();
+    }
+    uploadStatus.textContent = "Erkennung: " + JSON.stringify(info);
+    uploadStatus.className = "status ok";
+  } catch (e) {
+    uploadStatus.textContent = "Vorschlag fehlgeschlagen (" + e.message + ") - bitte manuell auswaehlen.";
+    uploadStatus.className = "status err";
+  }
+}
+
+drop.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", (e) => {
+  const f = e.target.files[0];
+  if (f) readFile(f);
+});
+
+["dragenter", "dragover"].forEach(ev =>
+  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("drag"); })
+);
+["dragleave", "drop"].forEach(ev =>
+  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("drag"); })
+);
+drop.addEventListener("drop", (e) => {
+  const f = e.dataTransfer.files[0];
+  if (f) readFile(f);
+});
+
+document.addEventListener("paste", (e) => {
+  const items = e.clipboardData?.items || [];
+  for (const it of items) {
+    if (it.type.startsWith("image/")) {
+      const f = it.getAsFile();
+      if (f) readFile(f);
+      break;
+    }
+  }
+});
+
+function readFile(file) {
+  if (!file.type.startsWith("image/")) {
+    uploadStatus.textContent = "Nur Bilddateien.";
+    uploadStatus.className = "status err";
+    return;
+  }
+  const r = new FileReader();
+  r.onload = (e) => setImage(e.target.result, file.type);
+  r.readAsDataURL(file);
+}
+
+// --- Render ---
+$("#renderBtn").addEventListener("click", async () => {
+  if (!IMG64) return;
+  const behandlung = $("#behandlung").value;
+  const materialien = {};
+  document.querySelectorAll("#materialSlots select").forEach(s => {
+    if (s.value) materialien[s.dataset.slot] = s.value;
+  });
+  const farbe = $("#farbe").value;
+  const postop_tag = $("#postop").value;
+  const extra = $("#extra").value.trim();
+
+  const btn = $("#renderBtn");
+  btn.disabled = true;
+  $("#renderStatus").textContent = "Erzeuge Karteitext ...";
+  $("#renderStatus").className = "status";
+
+  try {
+    const r = await fetch("/api/render", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        image: IMG64, mediaType: IMG_MIME,
+        behandlung, materialien, farbe, postop_tag, extra,
+      }),
+    });
+    if (!r.ok) {
+      const err = await r.text();
+      throw new Error(err.slice(0, 300));
+    }
+    const text = await r.text();
+    renderResult(text);
+    $("#renderStatus").textContent = "Fertig.";
+    $("#renderStatus").className = "status ok";
+  } catch (e) {
+    $("#renderStatus").textContent = "Fehler: " + e.message;
+    $("#renderStatus").className = "status err";
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$("#resetBtn").addEventListener("click", () => {
+  IMG64 = null;
+  $("#preview").innerHTML = "";
+  $("#extra").value = "";
+  $("#stepBehandlung").classList.add("hidden");
+  $("#stepResult").classList.add("hidden");
+  uploadStatus.textContent = "";
+});
+
+let RESULT_PLAIN = "";
+let RESULT_HTML = "";
+
+function markdownToHtml(md) {
+  let s = md.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  s = s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+  s = s.replace(/(^|[^\*])\*(?!\s)(.+?)(?<!\s)\*(?!\*)/g, "$1<i>$2</i>");
+  s = s.replace(/\n/g, "<br>");
+  return s;
+}
+
+function renderResult(text) {
+  RESULT_PLAIN = text.replace(/\*\*/g, "");
+  RESULT_HTML = markdownToHtml(text);
+  $("#result").innerHTML = RESULT_HTML;
+  $("#stepResult").classList.remove("hidden");
+  $("#copyStatus").textContent = "";
+}
+
+$("#copyPlain").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(RESULT_PLAIN);
+    $("#copyStatus").textContent = "Klartext kopiert.";
+    $("#copyStatus").className = "status ok";
+  } catch (e) {
+    $("#copyStatus").textContent = "Kopieren fehlgeschlagen: " + e.message;
+    $("#copyStatus").className = "status err";
+  }
+});
+
+$("#copyHtml").addEventListener("click", async () => {
+  try {
+    const html = "<html><body>" + RESULT_HTML + "</body></html>";
+    const blobHtml = new Blob([html], { type: "text/html" });
+    const blobText = new Blob([RESULT_PLAIN], { type: "text/plain" });
+    await navigator.clipboard.write([
+      new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText }),
+    ]);
+    $("#copyStatus").textContent = "Formatiert kopiert (HTML + Klartext-Fallback).";
+    $("#copyStatus").className = "status ok";
+  } catch (e) {
+    $("#copyStatus").textContent = "HTML-Kopie fehlgeschlagen: " + e.message + " · Fallback: Klartext-Kopie nutzen.";
+    $("#copyStatus").className = "status err";
+  }
+});
+</script>
+</body>
+</html>

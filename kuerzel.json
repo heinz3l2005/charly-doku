@@ -1,0 +1,38 @@
+{
+  "_hinweis": "charly-Kuerzel -> Bedeutung. Hier neue Kuerzel ergaenzen, sobald sie auftauchen.",
+
+  "flaechen": {
+    "v": "vestibulaer",
+    "o": "okklusal",
+    "m": "mesial",
+    "d": "distal",
+    "z": "zervikal",
+    "l": "lingual",
+    "p": "palatinal",
+    "b": "bukkal",
+    "i": "inzisal",
+    "vz": "vestibulaer-zervikal",
+    "mz": "mesial-zervikal",
+    "dz": "distal-zervikal",
+    "vzmz": "vestibulaer-zervikal + mesial-zervikal"
+  },
+
+  "abkuerzungen": {
+    "cp": "Caries profunda (indirekte Ueberkappung)",
+    "HiMi": "Hilfsmittel (z. B. Kofferdam, Matrize)",
+    "vipr": "Vitalitaets-/Sensibilitaetspruefung",
+    "l1uk": "Leitungsanaesthesie Unterkiefer",
+    "ubi": "Ubistesin (Anaesthetikum)",
+    "bmfsep": "besondere Massnahmen - Separieren",
+    "bmf": "besondere Massnahmen beim Fuellen",
+    "sk": "scharfe Zahnkante beseitigen",
+    "uez": "Behandlung ueberempfindlicher Zahnflaeche",
+    "pos": "positiv",
+    "exc1": "Excision (kleine Schleimhaut-/Gingiva-Exzision zur Kavitaetenerschliessung)",
+    "cam_ging": "Camlog Gingivaformer",
+    "cur": "CHX-Spuelung",
+    "iok": "Infiltrationsanaesthesie Oberkiefer",
+    "kn": "Kontrolle nach chirurgischem Eingriff",
+    "n": "Nachbehandlungsmassnahme"
+  }
+}
