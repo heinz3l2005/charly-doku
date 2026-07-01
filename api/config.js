@@ -1,12 +1,15 @@
 // api/config.js - liefert die drei JSON-Dateien gebuendelt an das Frontend.
 // So bleibt der Katalog serverseitig authoritativ.
 
-import fs from "node:fs";
-import path from "node:path";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, "..");
 
 function loadJson(name) {
-  const p = path.join(process.cwd(), name);
-  return JSON.parse(fs.readFileSync(p, "utf8"));
+  return JSON.parse(readFileSync(join(ROOT, name), "utf8"));
 }
 
 export default function handler(_req, res) {
