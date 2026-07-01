@@ -293,17 +293,22 @@ function buildZahnschema() {
 
 function updateHauptzahn() {
   const selected = [...document.querySelectorAll(".zahn-btn.on")].map(b => b.dataset.zahn);
-  // FDI-Reihenfolge: nach 2-stelliger Nummer
   selected.sort();
-  document.getElementById("hauptzahn").value = selected.join(", ");
+  const zahnStr = selected.join(", ");
+  document.getElementById("hauptzahn").value = zahnStr;
   const disp = document.getElementById("hauptzahn_display");
   if (selected.length === 0) {
     disp.textContent = "Keine Zaehne ausgewaehlt";
     disp.className = "zahn-status";
   } else {
-    disp.textContent = "Ausgewaehlt: " + selected.join(", ");
+    disp.textContent = "Ausgewaehlt: " + zahnStr;
     disp.className = "zahn-status has";
   }
+  // Fuellungen: leere Zahn-Felder mit der aktuellen Auswahl vorbelegen (bereits eingetragene
+  // Werte werden nicht ueberschrieben - so kann pro Fuellung noch anders zugeordnet werden).
+  document.querySelectorAll("#fllg_list .fllg-zahn").forEach(inp => {
+    if (!inp.value.trim()) inp.value = zahnStr;
+  });
   render();
 }
 
@@ -352,10 +357,13 @@ function init() {
 function addFuellung(preset = {}) {
   const list = $("#fllg_list");
   const idx = list.children.length;
+  // Neue Fuellung bekommt automatisch die aktuelle Hauptzahn-Auswahl,
+  // sofern kein Preset-Zahn vorgegeben ist.
+  const defaultZahn = preset.zahn || (document.getElementById("hauptzahn")?.value || "");
   const row = document.createElement("div");
   row.className = "fllg-row";
   row.innerHTML = `
-    <input type="text" placeholder="Zahn" class="fllg-zahn" value="${preset.zahn || ""}" />
+    <input type="text" placeholder="Zahn" class="fllg-zahn" value="${defaultZahn}" />
     <div class="flaechen">
       ${FLAECHEN.map(f => `<label><input type="checkbox" data-f="${f}"/>${f}</label>`).join("")}
     </div>
