@@ -214,7 +214,16 @@
   </div>
 
   <div class="card">
-    <h3>10. Weitere Zaehne (Freitext)</h3>
+    <h3 style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="sk_uez" style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
+      10. Sk + Uez am Nachbarzahn
+    </h3>
+    <label>Nachbarzahn (FDI-Nummer)</label>
+    <input type="text" id="nachbarzahn" placeholder="z. B. 45" />
+  </div>
+
+  <div class="card">
+    <h3>11. Freitext</h3>
     <textarea id="weitere" rows="2" placeholder="z. B. 45: Sk beseitigt. Beh. ueberempfindl. Zahnflaeche."></textarea>
   </div>
 
@@ -262,7 +271,7 @@ const ISOLATION_OPTIONS = [
   { key: "retr_faden_1", label: "Retr.faden Ultrapak Gr. 1" },
 ];
 
-const FLAECHEN = ["m", "o", "d", "v", "l", "p", "b", "i", "z"];
+const FLAECHEN = ["m", "o", "d", "v", "l"];
 
 // Zahnschema (FDI): OK von hinten-rechts nach hinten-links, UK gleich.
 const OK_TEETH = ["18","17","16","15","14","13","12","11","21","22","23","24","25","26","27","28"];
@@ -453,6 +462,8 @@ function render() {
   const adhaesiv = $("#adhaesiv").value;
   const farbe = $("#farbe").value;
   const okklusion = $("#okklusion").checked;
+  const sk_uez = $("#sk_uez").checked;
+  const nachbarzahn = $("#nachbarzahn").value.trim();
   const weitere = $("#weitere").value.trim();
 
   const isolation = collectIsolation();
@@ -510,6 +521,12 @@ function render() {
 
   // Politur (immer)
   parts.push("Politur.");
+
+  // Sk + Uez am Nachbarzahn (Standard-Formulierung)
+  if (sk_uez && nachbarzahn) {
+    parts.push("");
+    parts.push(`**${nachbarzahn}:** Sk beseitigt. Beh. ueberempfindl. Zahnflaeche.`);
+  }
 
   // Weitere Zaehne
   if (weitere) {
