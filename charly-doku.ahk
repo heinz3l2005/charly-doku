@@ -67,26 +67,43 @@ TmpOut   := A_Temp "\charly_doku.txt"
 }
 
 ; --------------------------------------------------------------------
-; Hotkey Strg+Alt+B: nimmt Markdown-Text mit **fett** aus der Zwischenablage,
-; konvertiert zu RTF und schreibt RTF + Klartext (ohne Marker) in die Zwischenablage.
-; So kann charly's Rich-Edit-Feld (das nur RTF, nicht HTML versteht) die Fett-Formatierung
-; beim Einfuegen uebernehmen.
+; Hotkey Strg+Umschalt+B: tippt den Markdown-Text aus der Zwischenablage direkt in
+; das gerade fokussierte Editorfeld (charly, Word, wo auch immer der Cursor steht)
+; und schaltet Fett per Strg+F an/aus - charly's Rich-Edit-Control akzeptiert keine
+; RTF-Paste, aber Strg+F ist bei charly die Fett-Umschaltung.
 ;
 ; Workflow:
 ;   1. In der Web-App /baustein oder / "Fuer charly kopieren (** Marker)" klicken.
-;   2. Strg+Umschalt+B druecken (^+b - Strg+Alt+B wird von TeamViewer abgefangen).
-;   3. In charly Strg+V.
+;   2. In charly's Karteitext-Editor klicken (Cursor muss dort blinken!).
+;   3. Strg+Umschalt+B druecken.
 ^+b:: {
-    plain := A_Clipboard
-    if (Trim(plain) = "") {
-        MsgBox("Zwischenablage ist leer.", "charly-doku RTF-Konvertierung", 48)
+    md := A_Clipboard
+    if (Trim(md) = "") {
+        MsgBox("Zwischenablage ist leer.", "charly-doku", 48)
         return
     }
-    rtf := MarkdownToRtf(plain)
-    plainClean := RegExReplace(plain, "\*\*(.+?)\*\*", "$1")
-    SetRtfClipboard(rtf, plainClean)
-    ToolTip("charly-doku: als RTF konvertiert. Jetzt Strg+V in charly.")
-    SetTimer () => ToolTip(), -2500
+    ; Kurze Wartezeit, damit User bei versehentlichem Hotkey noch reagieren kann
+    Sleep 150
+    TypeWithBoldToggle(md)
+    ToolTip("charly-doku: Text eingetippt (Fett via Strg+F).")
+    SetTimer () => ToolTip(), -2000
+}
+
+; Text zeichenweise tippen, an ** die Fett-Umschaltung (Strg+F) senden.
+TypeWithBoldToggle(md) {
+    parts := StrSplit(md, "**")
+    for i, part in parts {
+        if (part = "")
+            continue
+        isBold := Mod(i, 2) = 0   ; jedes zweite Segment ist fett
+        if (isBold) {
+            Send("^f")           ; Fett an
+            SendText(part)
+            Send("^f")           ; Fett aus
+        } else {
+            SendText(part)
+        }
+    }
 }
 
 ; --------------------------------------------------------------------
@@ -113,10 +130,10 @@ SetRtfClipboard(rtf, plainText) {
         FileDelete(tmpRtf)
     if FileExist(tmpTxt)
         FileDelete(tmpTxt)
-    FileAppend(rtf, tmpRtf, "UTF-8")
-    FileAppend(plainText, tmpTxt, "UTF-8")
-    ps := "$r = Get-Content -Raw -Encoding UTF8 '" tmpRtf "';"
-        . "$t = Get-Content -Raw -Encoding UTF8 '" tmpTxt "';"
+    FileAppend(rtf, tmpRtf, "UTF-8-RAW")
+    FileAppend(plainText, tmpTxt, "UTF-8-RAW")
+    ps := "$r = [IO.File]::ReadAllText('" tmpRtf "', [System.Text.Encoding]::UTF8);"
+        . "$t = [IO.File]::ReadAllText('" tmpTxt "', [System.Text.Encoding]::UTF8);"
         . "Add-Type -AssemblyName System.Windows.Forms;"
         . "$do = New-Object System.Windows.Forms.DataObject;"
         . "$do.SetData('Rich Text Format', $r);"
