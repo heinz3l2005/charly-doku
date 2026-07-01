@@ -117,7 +117,7 @@
     <button id="copyPlain" class="secondary">Klartext (ohne Marker)</button>
   </div>
   <div class="status" style="color:var(--muted);font-size:12px;margin-top:6px">
-    charly-Workflow: <b>"Fuer charly kopieren"</b> &rarr; in charly's Editor <b>klicken</b> (Cursor muss blinken) &rarr; <b>Strg+Umschalt+B</b> (AHK-Script muss laufen). Der Text wird direkt eingetippt, Fett per Strg+F.
+    charly-Workflow: <b>"Fuer charly kopieren"</b> &rarr; in charly's Editor <b>Strg+V</b>. Fuer <b>Fett</b> Stelle markieren und <b>Strg+F</b> in charly (manuell).
   </div>
   <div class="status" id="copyStatus"></div>
 </div>
@@ -349,8 +349,8 @@ function renderResult(text) {
 
 $("#copyCharly").addEventListener("click", async () => {
   try {
-    await navigator.clipboard.writeText(RESULT_MD);
-    $("#copyStatus").textContent = "Markdown mit ** Markern kopiert. Jetzt Strg+Umschalt+B druecken, dann in charly Strg+V.";
+    await navigator.clipboard.writeText(RESULT_PLAIN);
+    $("#copyStatus").textContent = "Klartext kopiert. In charly Strg+V - Fett dann manuell per Strg+F an markierten Stellen.";
     $("#copyStatus").className = "status ok";
   } catch (e) {
     $("#copyStatus").textContent = "Kopieren fehlgeschlagen: " + e.message;

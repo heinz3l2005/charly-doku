@@ -111,21 +111,7 @@
 <div id="form">
 
   <div class="card">
-    <h3>1. Datum &amp; Behandler</h3>
-    <div class="row">
-      <div>
-        <label>Datum (TT.MM.JJJJ)</label>
-        <input type="text" id="datum" />
-      </div>
-      <div>
-        <label>Behandler</label>
-        <input type="text" id="behandler" />
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>2. Zahn (Hauptzahn dieses Eintrags)</h3>
+    <h3>1. Zahn (Hauptzahn dieses Eintrags)</h3>
     <input type="text" id="hauptzahn" placeholder="z. B. 46 oder 46, 47" />
     <label style="margin-top:8px">Sensibilitaetspruefung (vipr)</label>
     <select id="vipr">
@@ -137,7 +123,7 @@
   </div>
 
   <div class="card">
-    <h3>3. Anaesthesie</h3>
+    <h3>2. Anaesthesie</h3>
     <div class="row-3">
       <div>
         <label>Art</label>
@@ -159,6 +145,12 @@
         <select id="ana_mittel"></select>
       </div>
     </div>
+  </div>
+
+  <div class="card">
+    <h3>3. Fuellungen</h3>
+    <div id="fllg_list"></div>
+    <button class="small" id="add_fllg" type="button">+ Fuellung hinzufuegen</button>
   </div>
 
   <div class="card">
@@ -189,13 +181,7 @@
   </div>
 
   <div class="card">
-    <h3>9. Fuellungen</h3>
-    <div id="fllg_list"></div>
-    <button class="small" id="add_fllg" type="button">+ Fuellung hinzufuegen</button>
-  </div>
-
-  <div class="card">
-    <h3>10. Materialien</h3>
+    <h3>9. Materialien</h3>
     <label>Komposit</label>
     <select id="komposit"></select>
     <label>Adhaesiv</label>
@@ -205,18 +191,7 @@
   </div>
 
   <div class="card">
-    <h3>11. Politur</h3>
-    <label class="check"><input type="checkbox" id="politur" /> Politur (14 pol)</label>
-  </div>
-
-  <div class="card">
-    <h3>12. Kontrolle</h3>
-    <label>Kontroll-Text</label>
-    <input type="text" id="kontrolle" value="Kontr. o.B." />
-  </div>
-
-  <div class="card">
-    <h3>13. Weitere Zaehne (Freitext)</h3>
+    <h3>10. Weitere Zaehne (Freitext)</h3>
     <textarea id="weitere" rows="2" placeholder="z. B. 45: Sk beseitigt. Beh. ueberempfindl. Zahnflaeche."></textarea>
   </div>
 
@@ -232,7 +207,7 @@
       <button class="small" id="copyPlain">Klartext (ohne Marker)</button>
     </div>
     <div class="status" style="color:var(--muted);font-size:12px;margin-top:6px">
-      charly-Workflow: <b>"Fuer charly kopieren"</b> &rarr; in charly's Editor <b>klicken</b> (Cursor muss blinken) &rarr; <b>Strg+Umschalt+B</b> (AHK-Script muss laufen). Der Text wird direkt eingetippt, Fett per Strg+F.
+      charly-Workflow: <b>"Fuer charly kopieren"</b> &rarr; in charly's Editor <b>Strg+V</b>. Fuer <b>Fett</b> die entsprechende Stelle markieren und <b>Strg+F</b> in charly (manuell).
     </div>
     <div class="status" id="copyStatus"></div>
   </div>
@@ -258,7 +233,7 @@ const ISOLATION_OPTIONS = [
   { key: "kofferdam", label: "Kofferdam" },
   { key: "teilmatrize_garrison", label: "Teilmatrize Garrison / Palodent V3" },
   { key: "ringmatrize", label: "Ringmatrize" },
-  { key: "tofflemire", label: "Zirkulaermatrize Tofflemire" },
+  { key: "tofflemire", label: "Tofflemire" },
   { key: "retr_faden_0", label: "Retr.faden Ultrapak Gr. 0" },
   { key: "retr_faden_00", label: "Retr.faden Ultrapak Gr. 00" },
   { key: "retr_faden_1", label: "Retr.faden Ultrapak Gr. 1" },
@@ -280,13 +255,6 @@ function fillSelect(el, items, standardName) {
 }
 
 function init() {
-  // Datum + Behandler
-  const today = new Date();
-  const dd = String(today.getDate()).padStart(2, "0");
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  $("#datum").value = dd + "." + mm + "." + today.getFullYear();
-  $("#behandler").value = CFG.config.behandler_standard || "M. Graf";
-
   // Materialien
   fillSelect($("#ana_mittel"), CFG.behandlungen.materialien.anaesthetikum || []);
   fillSelect($("#cp_mat"), CFG.behandlungen.materialien.ueberkappung || []);
@@ -385,8 +353,6 @@ function anaesthesieSatz(art, kiefer, mittel) {
 }
 
 function render() {
-  const datum = $("#datum").value.trim();
-  const behandler = $("#behandler").value.trim();
   const hauptzahn = $("#hauptzahn").value.trim();
   const vipr = $("#vipr").value;
   const ana_art = $("#ana_art").value;
@@ -400,16 +366,12 @@ function render() {
   const komposit = $("#komposit").value;
   const adhaesiv = $("#adhaesiv").value;
   const farbe = $("#farbe").value;
-  const politur = $("#politur").checked;
-  const kontrolle = $("#kontrolle").value.trim();
   const weitere = $("#weitere").value.trim();
 
   const isolation = collectIsolation();
   const fuellungen = collectFuellungen();
 
   const parts = [];
-  parts.push(datum || "[Datum]");
-  parts.push("");
 
   // Zahn-Zeile
   let zeile = `**${hauptzahn || "[Zahn]"}:** `;
@@ -459,11 +421,8 @@ function render() {
     parts.push(formatFuellungLine(f));
   }
 
-  // Politur
-  if (politur) parts.push("Politur.");
-
-  // Kontrolle
-  if (kontrolle) parts.push(kontrolle);
+  // Politur (immer)
+  parts.push("Politur.");
 
   // Weitere Zaehne
   if (weitere) {
@@ -473,10 +432,7 @@ function render() {
     parts.push(w);
   }
 
-  parts.push("");
-  parts.push(behandler);
-
-  const md = parts.join("\n").replace(/\n{3,}/g, "\n\n");
+  const md = parts.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd();
   RESULT_MD = md;
   RESULT_HTML = markdownToHtml(md);
   RESULT_PLAIN = md.replace(/\*\*/g, "");
@@ -496,10 +452,10 @@ let RESULT_PLAIN = "";
 
 $("#copyCharly").addEventListener("click", async () => {
   try {
-    // Kopiert den Markdown-Rohtext MIT ** Markern - der AHK-Hotkey Strg+Umschalt+B
-    // konvertiert das anschliessend in RTF (das charly's Rich-Edit-Feld versteht).
-    await navigator.clipboard.writeText(RESULT_MD);
-    $("#copyStatus").textContent = "Markdown mit ** Markern kopiert. Jetzt Strg+Umschalt+B druecken, dann in charly Strg+V.";
+    // Klartext ohne ** Marker - direkt via Strg+V in charly einfuegbar.
+    // Fett muss manuell in charly gesetzt werden (markieren + Strg+F).
+    await navigator.clipboard.writeText(RESULT_PLAIN);
+    $("#copyStatus").textContent = "Klartext kopiert. In charly Strg+V - Fett dann manuell per Strg+F an markierten Stellen.";
     $("#copyStatus").className = "status ok";
   } catch (e) {
     $("#copyStatus").textContent = "Kopieren fehlgeschlagen: " + e.message;

@@ -75,33 +75,67 @@ TmpOut   := A_Temp "\charly_doku.txt"
 ; Workflow:
 ;   1. In der Web-App /baustein oder / "Fuer charly kopieren (** Marker)" klicken.
 ;   2. In charly's Karteitext-Editor klicken (Cursor muss dort blinken!).
-;   3. Strg+Umschalt+B druecken.
-^+b:: {
+;   3. F9 druecken (frueher Strg+Alt+B / Strg+Umschalt+B - beide wurden von TeamViewer abgefangen).
+F9:: {
     md := A_Clipboard
     if (Trim(md) = "") {
         MsgBox("Zwischenablage ist leer.", "charly-doku", 48)
         return
     }
-    ; Kurze Wartezeit, damit User bei versehentlichem Hotkey noch reagieren kann
-    Sleep 150
-    TypeWithBoldToggle(md)
-    ToolTip("charly-doku: Text eingetippt (Fett via Strg+F).")
-    SetTimer () => ToolTip(), -2000
+    Sleep 200
+    hwnd := GetFocusedHwnd()
+    if (hwnd = 0) {
+        MsgBox "Kein fokussiertes Textfeld gefunden. Bitte in charly's Editor klicken, bevor F9.", "charly-doku", 48
+        return
+    }
+    TypeWithBoldToggle(md, hwnd)
+    ToolTip("charly-doku: Text eingetippt (hwnd " hwnd ").")
+    SetTimer () => ToolTip(), -2500
 }
 
-; Text zeichenweise tippen, an ** die Fett-Umschaltung (Strg+F) senden.
-TypeWithBoldToggle(md) {
+; Holt das aktuell fokussierte Kontrollelement per Win32-API - funktioniert auch
+; bei Custom-Delphi-Controls, wo AHK's ControlGetFocus versagt.
+GetFocusedHwnd() {
+    hwndTop := WinExist("A")
+    if (hwndTop = 0)
+        return 0
+    targetThread := DllCall("GetWindowThreadProcessId", "Ptr", hwndTop, "Ptr", 0, "UInt")
+    myThread := DllCall("GetCurrentThreadId", "UInt")
+    DllCall("AttachThreadInput", "UInt", myThread, "UInt", targetThread, "Int", 1)
+    hwnd := DllCall("GetFocus", "Ptr")
+    DllCall("AttachThreadInput", "UInt", myThread, "UInt", targetThread, "Int", 0)
+    return hwnd ? hwnd : hwndTop
+}
+
+; Schickt jedes Zeichen als WM_CHAR direkt an das fokussierte Kontrollelement.
+; Das umgeht TeamViewer's Input-Hook UND liefert Unicode-Zeichen zuverlaessig.
+; Fett-Umschaltung via ControlSend Ctrl+F.
+TypeWithBoldToggle(md, hwnd) {
     parts := StrSplit(md, "**")
     for i, part in parts {
         if (part = "")
             continue
-        isBold := Mod(i, 2) = 0   ; jedes zweite Segment ist fett
+        isBold := Mod(i, 2) = 0
         if (isBold) {
-            Send("^f")           ; Fett an
-            SendText(part)
-            Send("^f")           ; Fett aus
-        } else {
-            SendText(part)
+            ControlSend("^f", , "A")
+            Sleep 60
+        }
+        loop parse, part {
+            code := Ord(A_LoopField)
+            if (code = 10 || code = 13) {
+                ; Enter -> Zeilenumbruch
+                PostMessage(0x0102, 13, 0, , "ahk_id " hwnd)
+                Sleep 15
+                continue
+            }
+            ; WM_CHAR = 0x0102
+            PostMessage(0x0102, code, 0, , "ahk_id " hwnd)
+            Sleep 10
+        }
+        if (isBold) {
+            Sleep 60
+            ControlSend("^f", , "A")
+            Sleep 60
         }
     }
 }
