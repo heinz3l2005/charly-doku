@@ -117,7 +117,7 @@
     <button id="copyPlain" class="secondary">Klartext (ohne Marker)</button>
   </div>
   <div class="status" style="color:var(--muted);font-size:12px;margin-top:6px">
-    charly-Workflow: <b>"Fuer charly kopieren"</b> &rarr; <b>Strg+Alt+B</b> (charly-doku.ahk muss laufen) &rarr; in charly <b>Strg+V</b>.
+    charly-Workflow: <b>"Fuer charly kopieren"</b> &rarr; <b>Strg+Umschalt+B</b> (charly-doku.ahk muss laufen) &rarr; in charly <b>Strg+V</b>.
   </div>
   <div class="status" id="copyStatus"></div>
 </div>
@@ -350,7 +350,7 @@ function renderResult(text) {
 $("#copyCharly").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(RESULT_MD);
-    $("#copyStatus").textContent = "Markdown mit ** Markern kopiert. Jetzt Strg+Alt+B druecken, dann in charly Strg+V.";
+    $("#copyStatus").textContent = "Markdown mit ** Markern kopiert. Jetzt Strg+Umschalt+B druecken, dann in charly Strg+V.";
     $("#copyStatus").className = "status ok";
   } catch (e) {
     $("#copyStatus").textContent = "Kopieren fehlgeschlagen: " + e.message;

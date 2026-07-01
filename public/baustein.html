@@ -232,7 +232,7 @@
       <button class="small" id="copyPlain">Klartext (ohne Marker)</button>
     </div>
     <div class="status" style="color:var(--muted);font-size:12px;margin-top:6px">
-      charly-Workflow: <b>"Fuer charly kopieren"</b> &rarr; <b>Strg+Alt+B</b> (charly-doku.ahk muss laufen) &rarr; in charly <b>Strg+V</b>. Fett bleibt erhalten.
+      charly-Workflow: <b>"Fuer charly kopieren"</b> &rarr; <b>Strg+Umschalt+B</b> (charly-doku.ahk muss laufen) &rarr; in charly <b>Strg+V</b>. Fett bleibt erhalten.
     </div>
     <div class="status" id="copyStatus"></div>
   </div>
@@ -426,7 +426,7 @@ function render() {
   if (separieren) zeile += "Separieren. ";
 
   // Exkavation + Praep
-  zeile += "Exkavation, Praep.";
+  zeile += "Exkavation, Praep";
   if (kav_ungunst) zeile += " (Kav. unguenstig erreichbar)";
   zeile += ". ";
 
@@ -496,10 +496,10 @@ let RESULT_PLAIN = "";
 
 $("#copyCharly").addEventListener("click", async () => {
   try {
-    // Kopiert den Markdown-Rohtext MIT ** Markern - der AHK-Hotkey Strg+Alt+B
+    // Kopiert den Markdown-Rohtext MIT ** Markern - der AHK-Hotkey Strg+Umschalt+B
     // konvertiert das anschliessend in RTF (das charly's Rich-Edit-Feld versteht).
     await navigator.clipboard.writeText(RESULT_MD);
-    $("#copyStatus").textContent = "Markdown mit ** Markern kopiert. Jetzt Strg+Alt+B druecken, dann in charly Strg+V.";
+    $("#copyStatus").textContent = "Markdown mit ** Markern kopiert. Jetzt Strg+Umschalt+B druecken, dann in charly Strg+V.";
     $("#copyStatus").className = "status ok";
   } catch (e) {
     $("#copyStatus").textContent = "Kopieren fehlgeschlagen: " + e.message;

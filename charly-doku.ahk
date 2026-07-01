@@ -74,9 +74,9 @@ TmpOut   := A_Temp "\charly_doku.txt"
 ;
 ; Workflow:
 ;   1. In der Web-App /baustein oder / "Fuer charly kopieren (** Marker)" klicken.
-;   2. Strg+Alt+B druecken.
+;   2. Strg+Umschalt+B druecken (^+b - Strg+Alt+B wird von TeamViewer abgefangen).
 ;   3. In charly Strg+V.
-^!b:: {
+^+b:: {
     plain := A_Clipboard
     if (Trim(plain) = "") {
         MsgBox("Zwischenablage ist leer.", "charly-doku RTF-Konvertierung", 48)
@@ -145,35 +145,24 @@ MarkdownToHtml(md) {
     return "<html><body>" s "</body></html>"
 }
 
-; HTML in die Windows-Zwischenablage (CF_HTML) via PowerShell setzen.
-; plainFallback wird zusaetzlich als CF_TEXT hinterlegt.
+; HTML in die Windows-Zwischenablage schreiben (fuer Apps, die HTML-Paste unterstuetzen,
+; z. B. Word/WordPad/Outlook). plainFallback als Klartext-Fallback.
 SetHtmlClipboard(html, plainFallback) {
     tmpHtml := A_Temp "\charly_doku_clip.html"
     tmpTxt  := A_Temp "\charly_doku_clip.txt"
-    FileDelete(tmpHtml)
-    FileDelete(tmpTxt)
+    if FileExist(tmpHtml)
+        FileDelete(tmpHtml)
+    if FileExist(tmpTxt)
+        FileDelete(tmpTxt)
     FileAppend(html, tmpHtml, "UTF-8")
     FileAppend(plainFallback, tmpTxt, "UTF-8")
     ps := "$h = Get-Content -Raw -Encoding UTF8 '" tmpHtml "';"
         . "$t = Get-Content -Raw -Encoding UTF8 '" tmpTxt "';"
         . "Add-Type -AssemblyName System.Windows.Forms;"
         . "$do = New-Object System.Windows.Forms.DataObject;"
-        . "$do.SetData([System.Windows.Forms.DataFormats]::Html, "
-        . "[System.Windows.Forms.Clipboard]::GetHtmlAsCFHtml($h) ) 2>$null;"
-        . "if(-not $?){ "
-        . "$header = \"Version:0.9`r`nStartHTML:{0:D10}`r`nEndHTML:{1:D10}`r`nStartFragment:{2:D10}`r`nEndFragment:{3:D10}`r`n\";"
-        . "$pre = '<html><body><!--StartFragment-->'; $post = '<!--EndFragment--></body></html>';"
-        . "$frag = $h -replace '^<html><body>','' -replace '</body></html>$','';"
-        . "$body = $pre + $frag + $post;"
-        . "$sh = ($header -f 0,0,0,0).Length;"
-        . "$sf = $sh + $pre.Length;"
-        . "$ef = $sf + $frag.Length;"
-        . "$eh = $ef + $post.Length;"
-        . "$cf = ($header -f $sh,$eh,$sf,$ef) + $body;"
-        . "$do.SetData('HTML Format',$cf);"
-        . "}"
+        . "$do.SetData([System.Windows.Forms.DataFormats]::Html, $h);"
         . "$do.SetData([System.Windows.Forms.DataFormats]::UnicodeText, $t);"
-        . "[System.Windows.Forms.Clipboard]::SetDataObject($do,$true);"
+        . "[System.Windows.Forms.Clipboard]::SetDataObject($do, $true);"
     RunWait('powershell -NoProfile -STA -WindowStyle Hidden -Command "' ps '"', , "Hide")
     FileDelete(tmpHtml)
     FileDelete(tmpTxt)
