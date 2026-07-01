@@ -164,24 +164,21 @@
   </div>
 
   <div class="card">
-    <h3>6. Separieren (bmfsep)</h3>
-    <label class="check"><input type="checkbox" id="separieren" /> Separieren durchgefuehrt</label>
+    <h3 style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="exc1" style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
+      6. Gingiva-Exzision (exc1, GOZ 49)
+    </h3>
   </div>
 
   <div class="card">
-    <h3>7. Gingiva-Exzision (exc1, GOZ 49)</h3>
-    <label class="check"><input type="checkbox" id="exc1" /> Kleine Gingiva-Exzision durchgefuehrt</label>
-  </div>
-
-  <div class="card">
-    <h3>8. Cp - indirekte Ueberkappung</h3>
+    <h3>7. Cp - indirekte Ueberkappung</h3>
     <label class="check"><input type="checkbox" id="cp" /> Cp mit Ueberkappungsmaterial</label>
     <label>Material</label>
     <select id="cp_mat"></select>
   </div>
 
   <div class="card">
-    <h3>9. Materialien</h3>
+    <h3>8. Materialien</h3>
     <label>Komposit</label>
     <select id="komposit"></select>
     <label>Adhaesiv</label>
@@ -191,7 +188,7 @@
   </div>
 
   <div class="card">
-    <h3>10. Weitere Zaehne (Freitext)</h3>
+    <h3>9. Weitere Zaehne (Freitext)</h3>
     <textarea id="weitere" rows="2" placeholder="z. B. 45: Sk beseitigt. Beh. ueberempfindl. Zahnflaeche."></textarea>
   </div>
 
@@ -359,7 +356,6 @@ function render() {
   const ana_kiefer = $("#ana_kiefer").value;
   const ana_mittel = $("#ana_mittel").value;
   const kav_ungunst = $("#kav_ungunst").checked;
-  const separieren = $("#separieren").checked;
   const exc1 = $("#exc1").checked;
   const cp = $("#cp").checked;
   const cp_mat = $("#cp_mat").value;
@@ -383,9 +379,6 @@ function render() {
 
   // Anaesthesie
   zeile += anaesthesieSatz(ana_art, ana_kiefer, ana_mittel);
-
-  // Separieren
-  if (separieren) zeile += "Separieren. ";
 
   // Exkavation + Praep
   zeile += "Exkavation, Praep";
