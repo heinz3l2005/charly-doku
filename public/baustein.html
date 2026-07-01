@@ -154,8 +154,10 @@
   </div>
 
   <div class="card">
-    <h3>4. Kavitaeten-Zuschlaege</h3>
-    <label class="check"><input type="checkbox" id="kav_ungunst" /> Kavitaet unguenstig erreichbar (GOZ 2080-Zuschlag)</label>
+    <h3 style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="kav_ungunst" style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
+      4. Kavitaeten-Zuschlaege
+    </h3>
   </div>
 
   <div class="card">
@@ -165,14 +167,16 @@
 
   <div class="card">
     <h3 style="display:flex;align-items:center;gap:8px">
-      <input type="checkbox" id="exc1" style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
+      <input type="checkbox" id="exc1" checked style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
       6. Gingiva-Exzision (exc1, GOZ 49)
     </h3>
   </div>
 
   <div class="card">
-    <h3>7. Cp - indirekte Ueberkappung</h3>
-    <label class="check"><input type="checkbox" id="cp" /> Cp mit Ueberkappungsmaterial</label>
+    <h3 style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="cp" style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
+      7. Cp - indirekte Ueberkappung
+    </h3>
     <label>Material</label>
     <select id="cp_mat"></select>
   </div>
@@ -189,7 +193,7 @@
 
   <div class="card">
     <h3 style="display:flex;align-items:center;gap:8px">
-      <input type="checkbox" id="okklusion" style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
+      <input type="checkbox" id="okklusion" checked style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
       9. Stat. + dyn. Okklusion kontrolliert
     </h3>
   </div>
@@ -241,7 +245,6 @@ const ISOLATION_OPTIONS = [
   { key: "retr_faden_0", label: "Retr.faden Ultrapak Gr. 0" },
   { key: "retr_faden_00", label: "Retr.faden Ultrapak Gr. 00" },
   { key: "retr_faden_1", label: "Retr.faden Ultrapak Gr. 1" },
-  { key: "splitdam", label: "Split-Dam" },
 ];
 
 const FLAECHEN = ["m", "o", "d", "v", "l", "p", "b", "i", "z"];
