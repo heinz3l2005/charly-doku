@@ -188,7 +188,14 @@
   </div>
 
   <div class="card">
-    <h3>9. Weitere Zaehne (Freitext)</h3>
+    <h3 style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="okklusion" style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
+      9. Stat. + dyn. Okklusion kontrolliert
+    </h3>
+  </div>
+
+  <div class="card">
+    <h3>10. Weitere Zaehne (Freitext)</h3>
     <textarea id="weitere" rows="2" placeholder="z. B. 45: Sk beseitigt. Beh. ueberempfindl. Zahnflaeche."></textarea>
   </div>
 
@@ -362,6 +369,7 @@ function render() {
   const komposit = $("#komposit").value;
   const adhaesiv = $("#adhaesiv").value;
   const farbe = $("#farbe").value;
+  const okklusion = $("#okklusion").checked;
   const weitere = $("#weitere").value.trim();
 
   const isolation = collectIsolation();
@@ -413,6 +421,9 @@ function render() {
   for (const f of fuellungen) {
     parts.push(formatFuellungLine(f));
   }
+
+  // Stat. + dyn. Okklusion (optional, vor Politur)
+  if (okklusion) parts.push("Stat. + dyn. Okklusion kontrolliert.");
 
   // Politur (immer)
   parts.push("Politur.");
