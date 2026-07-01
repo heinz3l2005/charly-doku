@@ -75,6 +75,19 @@
   .fllg-row .zerv { font-size: 12px; }
   .fllg-row .del { background: transparent; color: var(--danger); border: none; cursor: pointer; padding: 4px 8px; }
 
+  #zahnschema { margin: 4px 0; }
+  .zahn-row { display: flex; gap: 2px; justify-content: center; margin: 4px 0; }
+  .zahn-btn {
+    width: 36px; height: 32px; background: #0b1220; color: var(--text);
+    border: 1px solid var(--border); border-radius: 3px; cursor: pointer;
+    font: inherit; font-size: 12px; padding: 0;
+  }
+  .zahn-btn:hover { border-color: var(--accent); }
+  .zahn-btn.on { background: var(--accent); color: #001a2b; border-color: var(--accent); font-weight: 600; }
+  .zahn-btn.mid-right { margin-left: 10px; }
+  .zahn-status { color: var(--muted); font-size: 12px; margin-top: 6px; text-align: center; }
+  .zahn-status.has { color: var(--ok); }
+
   button.primary {
     background: var(--accent); color: #001a2b; border: none;
     padding: 10px 18px; border-radius: 6px; cursor: pointer;
@@ -112,7 +125,9 @@
 
   <div class="card">
     <h3>1. Zahn (Hauptzahn dieses Eintrags)</h3>
-    <input type="text" id="hauptzahn" placeholder="z. B. 46 oder 46, 47" />
+    <div id="zahnschema"></div>
+    <div class="zahn-status" id="hauptzahn_display">Keine Zaehne ausgewaehlt</div>
+    <input type="hidden" id="hauptzahn" />
     <label style="margin-top:8px">Sensibilitaetspruefung (vipr)</label>
     <select id="vipr">
       <option value="pos" selected>positiv (Standard)</option>
@@ -174,7 +189,7 @@
 
   <div class="card">
     <h3 style="display:flex;align-items:center;gap:8px">
-      <input type="checkbox" id="cp" style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
+      <input type="checkbox" id="cp" checked style="margin:0;transform:scale(1.1);accent-color:var(--accent)" />
       7. Cp - indirekte Ueberkappung
     </h3>
     <label>Material</label>
@@ -249,6 +264,49 @@ const ISOLATION_OPTIONS = [
 
 const FLAECHEN = ["m", "o", "d", "v", "l", "p", "b", "i", "z"];
 
+// Zahnschema (FDI): OK von hinten-rechts nach hinten-links, UK gleich.
+const OK_TEETH = ["18","17","16","15","14","13","12","11","21","22","23","24","25","26","27","28"];
+const UK_TEETH = ["48","47","46","45","44","43","42","41","31","32","33","34","35","36","37","38"];
+
+function buildZahnschema() {
+  const container = document.getElementById("zahnschema");
+  container.innerHTML = "";
+  for (const teeth of [OK_TEETH, UK_TEETH]) {
+    const row = document.createElement("div");
+    row.className = "zahn-row";
+    teeth.forEach((t, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "zahn-btn";
+      btn.textContent = t;
+      btn.dataset.zahn = t;
+      if (idx === 8) btn.classList.add("mid-right"); // vor 21/31 ein bisschen Luft (Mittellinie)
+      btn.addEventListener("click", () => {
+        btn.classList.toggle("on");
+        updateHauptzahn();
+      });
+      row.appendChild(btn);
+    });
+    container.appendChild(row);
+  }
+}
+
+function updateHauptzahn() {
+  const selected = [...document.querySelectorAll(".zahn-btn.on")].map(b => b.dataset.zahn);
+  // FDI-Reihenfolge: nach 2-stelliger Nummer
+  selected.sort();
+  document.getElementById("hauptzahn").value = selected.join(", ");
+  const disp = document.getElementById("hauptzahn_display");
+  if (selected.length === 0) {
+    disp.textContent = "Keine Zaehne ausgewaehlt";
+    disp.className = "zahn-status";
+  } else {
+    disp.textContent = "Ausgewaehlt: " + selected.join(", ");
+    disp.className = "zahn-status has";
+  }
+  render();
+}
+
 function fillSelect(el, items, standardName) {
   el.innerHTML = "";
   for (const it of items) {
@@ -262,6 +320,9 @@ function fillSelect(el, items, standardName) {
 }
 
 function init() {
+  // Zahnschema aufbauen
+  buildZahnschema();
+
   // Materialien
   fillSelect($("#ana_mittel"), CFG.behandlungen.materialien.anaesthetikum || []);
   fillSelect($("#cp_mat"), CFG.behandlungen.materialien.ueberkappung || []);
@@ -354,9 +415,7 @@ function formatFuellungLine(f) {
 
 function anaesthesieSatz(art, kiefer, mittel) {
   if (art === "none") return "";
-  if (art === "I") return `**LA ${mittel} (Infiltration ${kiefer}).** `;
-  if (art === "L") return `**LA ${mittel} (Leitungsanaesthesie ${kiefer}).** `;
-  return "";
+  return `**Anaesthesie ${art} ${kiefer} (${mittel}).** `;
 }
 
 function render() {

@@ -8,13 +8,14 @@
       { "name": "Septanest" }
     ],
     "komposit": [
-      { "name": "G-aenial Universal", "standard": true },
+      { "name": "GC G-Aenial Universal", "standard": true },
       { "name": "Tetric EvoCeram" },
       { "name": "Filtek Supreme XTE" },
       { "name": "Ceram.x Spectra" }
     ],
     "adhaesiv": [
       { "name": "OptiBond FL", "standard": true },
+      { "name": "Vivapen 2" },
       { "name": "Scotchbond Universal" }
     ],
     "ueberkappung": [
