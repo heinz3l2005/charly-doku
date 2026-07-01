@@ -309,6 +309,19 @@ function updateHauptzahn() {
   document.querySelectorAll("#fllg_list .fllg-zahn").forEach(inp => {
     if (!inp.value.trim()) inp.value = zahnStr;
   });
+  // Anaesthesie automatisch setzen: alle Zaehne OK -> Infiltration OK,
+  // alle Zaehne UK -> Leitungsanaesthesie UK. Mixed oder keine Auswahl: nicht anfassen.
+  if (selected.length > 0) {
+    const allOK = selected.every(t => t.startsWith("1") || t.startsWith("2"));
+    const allUK = selected.every(t => t.startsWith("3") || t.startsWith("4"));
+    if (allOK) {
+      document.getElementById("ana_art").value = "I";
+      document.getElementById("ana_kiefer").value = "OK";
+    } else if (allUK) {
+      document.getElementById("ana_art").value = "L";
+      document.getElementById("ana_kiefer").value = "UK";
+    }
+  }
   render();
 }
 
