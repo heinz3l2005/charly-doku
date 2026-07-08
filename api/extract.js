@@ -31,8 +31,18 @@ export default async function handler(req, res) {
 
   const bh = loadJson("behandlungen.json");
   const cfg = loadJson("config.json");
+  const kz = loadJson("kuerzel.json");
   const MODEL = cfg.modell || "claude-opus-4-8";
   const behandlungenKeys = Object.keys(bh.behandlungen);
+  const materialKategorien = Object.keys(bh.materialien);
+  const bekannteKuerzel = [
+    ...Object.keys(kz.flaechen || {}),
+    ...Object.keys(kz.abkuerzungen || {}),
+  ];
+  const bekannteMaterialien = [];
+  for (const kat of materialKategorien) {
+    for (const m of bh.materialien[kat]) bekannteMaterialien.push(m.name);
+  }
 
   const system =
     "Du extrahierst strukturiert Daten aus einer charly-Leistungserfassung. Antworte ausschliesslich mit JSON, kein weiterer Text, kein Markdown-Codeblock.";
@@ -46,8 +56,11 @@ export default async function handler(req, res) {
     `  "zaehne": [<Zahnnummern im FDI-Schema als Strings>],\n` +
     `  "cp": <true wenn Caries profunda / indirekte Ueberkappung erkennbar, sonst false>,\n` +
     `  "flaechen_pro_zahn": { "<zahn>": "<flaechenkuerzel>" },\n` +
-    `  "hat_la": <true wenn eine Anaesthesie-Ziffer/Kuerzel vorhanden (ubi/l1uk/iok/0090/40ok), sonst false>\n` +
-    `}`;
+    `  "hat_la": <true wenn eine Anaesthesie-Ziffer/Kuerzel vorhanden (ubi/l1uk/iok/0090/40ok), sonst false>,\n` +
+    `  "goz_ziffern": [<GOZ/BEMA-Ziffern die im Screenshot sichtbar sind, z. B. "2080", "13ak", "9040">],\n` +
+    `  "materialtext": [<Text/Produktnamen die im Screenshot als Material/Charge auftauchen, z.B. "Cam_ging", "Ubistesin", chargen-artige Kuerzel; auch scheinbar unwichtige. Rohtext.>]\n` +
+    `}\n\n` +
+    `Wichtig: Auch Kuerzel und Materialtexte listen, die Du selbst nicht kennst - der Backend-Code prueft dann gegen den Katalog.`;
 
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -92,6 +105,25 @@ export default async function handler(req, res) {
     } catch {
       return res.status(500).json({ error: "Klassifikation nicht als JSON parsebar", raw: text });
     }
+
+    // Auto-Erkennung: Kuerzel und Materialtexte, die NICHT im Katalog stehen.
+    const norm = (s) => String(s || "").trim().toLowerCase();
+    const bekannteKuerzelSet = new Set(bekannteKuerzel.map(norm));
+    const bekannteMatSet = new Set(bekannteMaterialien.map(norm));
+    const unbekannteKuerzel = (parsed.kuerzel || []).filter(k => k && !bekannteKuerzelSet.has(norm(k)));
+    const unbekannteMaterialien = (parsed.materialtext || []).filter(m => m && !bekannteMatSet.has(norm(m)));
+    const behandlungUnbekannt = parsed.behandlung === "unbekannt" || !behandlungenKeys.includes(parsed.behandlung);
+
+    parsed.unbekannt = {
+      kuerzel: [...new Set(unbekannteKuerzel)],
+      materialien: [...new Set(unbekannteMaterialien)],
+      behandlung: behandlungUnbekannt,
+    };
+    parsed.kataloge = {
+      materialKategorien,
+      behandlungenKeys,
+    };
+
     res.status(200).json(parsed);
   } catch (e) {
     res.status(500).json({ error: "Serverfehler", detail: String(e).slice(0, 300) });

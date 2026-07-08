@@ -78,6 +78,17 @@
   <div class="status" id="uploadStatus"></div>
 </div>
 
+<div class="card hidden" id="stepUnbekannt">
+  <h3 style="margin:0 0 6px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">
+    Neue Eintraege erkannt - im Katalog dauerhaft speichern?
+  </h3>
+  <div id="unbekannt_list"></div>
+  <div class="actions">
+    <button id="saveCatalog" class="secondary">Ausgewaehlte in Katalog speichern (GitHub)</button>
+  </div>
+  <div class="status" id="saveCatalogStatus"></div>
+</div>
+
 <div class="card hidden" id="stepBehandlung">
   <label>Behandlung</label>
   <select id="behandlung"></select>
@@ -230,11 +241,164 @@ async function extractAndPreselect() {
     }
     uploadStatus.textContent = "Erkennung: " + JSON.stringify(info);
     uploadStatus.className = "status ok";
+    renderUnbekanntPanel(info);
   } catch (e) {
     uploadStatus.textContent = "Vorschlag fehlgeschlagen (" + e.message + ") - bitte manuell auswaehlen.";
     uploadStatus.className = "status err";
   }
 }
+
+// Panel fuer neu erkannte Kuerzel/Materialien/Behandlungen bauen und einblenden.
+let LAST_EXTRACT = null;
+function renderUnbekanntPanel(info) {
+  LAST_EXTRACT = info;
+  const panel = document.getElementById("stepUnbekannt");
+  const list = document.getElementById("unbekannt_list");
+  list.innerHTML = "";
+
+  const unk = info.unbekannt || {};
+  const kats = info.kataloge?.materialKategorien || Object.keys(CFG.behandlungen.materialien);
+  const behKeys = info.kataloge?.behandlungenKeys || Object.keys(CFG.behandlungen.behandlungen);
+
+  const hasSomething = (unk.kuerzel?.length || 0) + (unk.materialien?.length || 0) > 0 || unk.behandlung;
+  if (!hasSomething) {
+    panel.classList.add("hidden");
+    return;
+  }
+
+  // Materialien
+  for (const m of (unk.materialien || [])) {
+    const row = document.createElement("div");
+    row.className = "card";
+    row.style.margin = "6px 0";
+    row.innerHTML = `
+      <label style="font-size:12px;color:var(--muted)">Neues Material: <b style="color:var(--text)">${escapeHtml(m)}</b></label>
+      <div class="row-3" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">
+        <div>
+          <label>Kategorie</label>
+          <select class="new-mat-kat">
+            <option value="">- ignorieren -</option>
+            ${kats.map(k => `<option value="${k}">${k}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label>Name (wie gespeichert)</label>
+          <input type="text" class="new-mat-name" value="${escapeHtml(m)}" />
+        </div>
+        <label class="check" style="margin-bottom:6px"><input type="checkbox" class="new-mat-std" /> als Standard</label>
+      </div>
+    `;
+    list.appendChild(row);
+  }
+
+  // Kuerzel
+  for (const k of (unk.kuerzel || [])) {
+    const row = document.createElement("div");
+    row.className = "card";
+    row.style.margin = "6px 0";
+    row.innerHTML = `
+      <label style="font-size:12px;color:var(--muted)">Neues Kuerzel: <b style="color:var(--text)">${escapeHtml(k)}</b></label>
+      <div class="row-3" style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:end">
+        <div>
+          <label>Typ</label>
+          <select class="new-kz-typ">
+            <option value="">- ignorieren -</option>
+            <option value="abkuerzungen">Abkuerzung / Kuerzel</option>
+            <option value="flaechen">Flaechenkuerzel</option>
+          </select>
+        </div>
+        <div>
+          <label>Bedeutung / Ausgeschrieben</label>
+          <input type="text" class="new-kz-value" placeholder="z. B. 'Fluoridlack' oder 'okklusal'" />
+          <input type="hidden" class="new-kz-key" value="${escapeHtml(k)}" />
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  }
+
+  // Neue Behandlung (nur Hinweis, Konfiguration ist manuell)
+  if (unk.behandlung) {
+    const row = document.createElement("div");
+    row.className = "card";
+    row.style.margin = "6px 0";
+    row.innerHTML = `
+      <label style="font-size:12px;color:var(--muted)">Neue Behandlung erkannt</label>
+      <div class="row-3" style="display:grid;grid-template-columns:1fr 2fr;gap:8px;align-items:end">
+        <div>
+          <label>Key (technischer Name)</label>
+          <input type="text" class="new-beh-key" placeholder="z. B. 'zahnsteinentfernung'" />
+        </div>
+        <div>
+          <label>Bezeichnung</label>
+          <input type="text" class="new-beh-bez" placeholder="z. B. 'Professionelle Zahnreinigung'" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">
+        Detailkonfig (Material-Slots, Vorlage) muss danach manuell in behandlungen.json ergaenzt werden.
+      </div>
+    `;
+    list.appendChild(row);
+  }
+
+  panel.classList.remove("hidden");
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+$("#saveCatalog")?.addEventListener("click", async () => {
+  const materialien = [];
+  document.querySelectorAll("#unbekannt_list .new-mat-kat").forEach((sel, i) => {
+    const kat = sel.value;
+    if (!kat) return;
+    const name = sel.closest(".card").querySelector(".new-mat-name").value.trim();
+    const standard = sel.closest(".card").querySelector(".new-mat-std").checked;
+    if (name) materialien.push({ kategorie: kat, name, standard });
+  });
+  const kuerzel = [];
+  document.querySelectorAll("#unbekannt_list .new-kz-typ").forEach((sel) => {
+    const typ = sel.value;
+    if (!typ) return;
+    const card = sel.closest(".card");
+    const key = card.querySelector(".new-kz-key").value.trim();
+    const value = card.querySelector(".new-kz-value").value.trim();
+    if (key && value) kuerzel.push({ typ, key, value });
+  });
+  const behandlungen = [];
+  const behKey = document.querySelector("#unbekannt_list .new-beh-key");
+  if (behKey) {
+    const key = behKey.value.trim();
+    const bezeichnung = document.querySelector("#unbekannt_list .new-beh-bez").value.trim();
+    if (key) behandlungen.push({ key, bezeichnung });
+  }
+
+  if (materialien.length === 0 && kuerzel.length === 0 && behandlungen.length === 0) {
+    $("#saveCatalogStatus").textContent = "Nichts zu speichern - bitte mindestens ein Item konfigurieren.";
+    $("#saveCatalogStatus").className = "status err";
+    return;
+  }
+
+  $("#saveCatalogStatus").textContent = "Speichere ...";
+  $("#saveCatalogStatus").className = "status";
+  try {
+    const r = await fetch("/api/save-to-catalog", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ materialien, kuerzel, behandlungen }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error + ": " + (data.detail || ""));
+    $("#saveCatalogStatus").textContent = `${data.changes?.length || 0} gespeichert. ${data.hinweis || ""}`;
+    $("#saveCatalogStatus").className = "status ok";
+    // Nach 30s Config neu laden
+    setTimeout(loadConfig, 30000);
+  } catch (e) {
+    $("#saveCatalogStatus").textContent = "Speichern fehlgeschlagen: " + e.message;
+    $("#saveCatalogStatus").className = "status err";
+  }
+});
 
 drop.addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", (e) => {

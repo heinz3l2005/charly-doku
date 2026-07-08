@@ -70,4 +70,27 @@ vercel dev
 Aktuell **kein Zugriffsschutz** - nur fuer erste Tests geeignet, NICHT fuer echte
 Patienten-Screenshots. Vor Produktivbetrieb Bearer-Token oder Vercel Password
 Protection ergaenzen und AVV/DPA mit Anthropic abschliessen.
+
+## Katalog dauerhaft aus der Web-App erweitern
+
+Der Screenshot-Modus erkennt neue Kuerzel/Materialien/Behandlungen und bietet
+"Im Katalog speichern" an. Der Server commitet die Aenderung dann per GitHub-API
+in `behandlungen.json` bzw. `kuerzel.json` - Vercel deployt automatisch.
+
+### Einmal-Setup (GitHub-Token in Vercel)
+1. Auf github.com -> Settings -> Developer settings -> Personal access tokens ->
+   **Fine-grained tokens** -> "Generate new token".
+2. Repository access: Only select repositories -> `heinz3l2005/charly-doku`.
+3. Permissions -> Repository permissions -> **Contents: Read and write**.
+   (Alles andere auf "no access" lassen.)
+4. Token generieren, kopieren.
+5. Auf vercel.com -> Projekt `charly-doku` -> Settings -> Environment Variables:
+   - `GITHUB_TOKEN` = dein Token
+   - `GITHUB_REPO_OWNER` = `heinz3l2005`
+   - `GITHUB_REPO_NAME` = `charly-doku`
+   - `GITHUB_BRANCH` = `main`  (optional, default: main)
+6. Redeploy oder auf naechsten Push warten.
+
+Danach speichert "Im Katalog speichern" direkt in dein Repo. Ohne Setup zeigt der
+Endpoint eine Fehlermeldung mit Hinweis auf fehlende Env-Vars.
 ```
