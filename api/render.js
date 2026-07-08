@@ -104,7 +104,8 @@ export default async function handler(req, res) {
       .join("\n")
       .trim();
 
-    res.status(200).type("text/plain; charset=utf-8").send(text || "[Keine Antwort erhalten]");
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.status(200).send(text || "[Keine Antwort erhalten]");
   } catch (e) {
     res.status(500).json({ error: "Serverfehler", detail: String(e).slice(0, 300) });
   }
