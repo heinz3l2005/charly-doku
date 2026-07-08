@@ -53,6 +53,7 @@
     ],
     "abformmaterial": [
       { "name": "Impregum", "standard": true },
+      { "name": "Optische Abformung (GOZ 0065)" },
       { "name": "Aquasil" },
       { "name": "Flexitime" },
       { "name": "Alginat" }
@@ -133,6 +134,23 @@
       ],
       "farbe_abfragen": false,
       "vorlage": "{{datum}}\n\n**FU3 (Kind, 21.-33. Lm):** Anamnese {{anamnese}}. Milchzahnstatus {{status}}. **MH {{mh}}**, {{gingivitis}}. **Kariesrisiko {{risiko}}.** Ernaehrung {{ernaehrung}}, {{habits}}. **Elternberatung:** Putztechnik (KAI), Zuckerreduktion, Fluoridzufuhr. {{fluoridlack_satz}}**Recall {{recall}} Monate.**\n\n{{behandler}}"
+    },
+
+    "praeparation": {
+      "bezeichnung": "Praeparation Krone/Bruecke (Erstpraep., Abformung, Provisorium)",
+      "erkennung": {
+        "goz": ["2270", "2280", "5170", "2260"],
+        "bema": [],
+        "kuerzel": ["praep"]
+      },
+      "material_slots": [
+        { "kategorie": "anaesthetikum", "frage": "Anaesthetikum?" },
+        { "kategorie": "retraktionsfaden", "frage": "Retraktionsfaden?" },
+        { "kategorie": "abformmaterial", "frage": "Abformmaterial?" },
+        { "kategorie": "prov_zement", "frage": "Provisorischer Zement?" }
+      ],
+      "farbe_abfragen": false,
+      "vorlage": "{{datum}}\n\n**{{zaehne}}:** Sens.+. Anaesthesie I {{kiefer}} (**{{anaesthetikum}}**). Praeparation {{zaehne}} fuer Krone/Bruecke. **Retr.faden {{retraktionsfaden}}** gelegt. Abformung **{{abformmaterial}}**. Provisorium angefertigt und mit **{{prov_zement}}** eingesetzt.\n\n{{behandler}}"
     },
 
     "nachpraeparation": {
