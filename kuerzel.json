@@ -33,6 +33,10 @@
     "cur": "CHX-Spuelung",
     "iok": "Infiltrationsanaesthesie Oberkiefer",
     "kn": "Kontrolle nach chirurgischem Eingriff",
-    "n": "Nachbehandlungsmassnahme"
+    "n": "Nachbehandlungsmassnahme",
+    "il": "individueller Loeffel (Abformung GOZ 5170)",
+    "biss": "Material zur Bissregistrierung",
+    "AbdrPfo": "Implantat-Abdruckpfosten",
+    "einsk": "Wiedereingliederung Krone/Teilkrone/Einlagefuellung (GOZ 2310)"
   }
 }

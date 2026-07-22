@@ -28,6 +28,7 @@
     "matrize": [
       { "name": "Kofferdam + Teilmatrize", "standard": true },
       { "name": "Ringmatrize (z. B. Palodent V3)" },
+      { "name": "Matrizenband" },
       { "name": "Zirkulaermatrize (Tofflemire)" }
     ],
     "retraktionsfaden": [
@@ -68,6 +69,12 @@
       { "name": "Duraphat", "standard": true },
       { "name": "Fluor Protector" },
       { "name": "Bifluorid 12" }
+    ],
+    "bissregistrierung": [
+      { "name": "HardBite", "standard": true }
+    ],
+    "befestigungszement": [
+      { "name": "RelyX Unicem", "standard": true }
     ]
   },
 
@@ -88,7 +95,7 @@
         { "kategorie": "retraktionsfaden", "frage": "Retraktionsfaden (zervikale Fuellung)?", "optional": true }
       ],
       "farbe_abfragen": true,
-      "vorlage": "{{datum}}\n\n{{zahn}}: {{anaesthesie_satz}}Exkavation, Praeparation{{schwierigkeit}}. {{ueberkappung_satz}}{{isolation}}.\nAdhaesivtechnik ({{adhaesiv}}), Komposit {{komposit}}, Farbe {{farbe}}.\n{{fuellungen}}\nKontrolle o.B.\n{{weitere_zaehne}}\n{{behandler}}"
+      "vorlage": "{{datum}}\n\n{{zahn}}: {{anaesthesie_satz}}Exkavation, Praeparation{{schwierigkeit}}. {{ueberkappung_satz}}{{isolation}}.\nAdhaesivtechnik ({{adhaesiv}}), Komposit {{komposit}}, Farbe {{farbe}}.\n{{fuellungen}}\nKontrolle stat. + dyn. Okklusion o.B.\n{{weitere_zaehne}}\n{{behandler}}"
     },
 
     "implantat_prothetik": {
@@ -99,9 +106,12 @@
         "kuerzel": []
       },
       "material_slots": [
-        { "kategorie": "anaesthetikum", "frage": "Anaesthetikum?", "optional": true }
+        { "kategorie": "anaesthetikum", "frage": "Anaesthetikum?", "optional": true },
+        { "kategorie": "abformmaterial", "frage": "Abformmaterial?" },
+        { "kategorie": "bissregistrierung", "frage": "Bissregistrierungsmaterial?", "optional": true }
       ],
       "farbe_abfragen": false,
+      "abformtechnik_abfragen": "Offene Abformung (Pick-up) oder geschlossene Abformung (Repositionstechnik)?",
       "vorlage": "{{datum}}\n\n{{platzhalter}}\n{{behandler}}"
     },
 
@@ -168,6 +178,22 @@
       ],
       "farbe_abfragen": false,
       "vorlage": "{{datum}}\n\n**{{zaehne}}:** Sens.+. **LA {{anaesthetikum}} (Infiltration {{kiefer}}).** Prov entfernt. **Retr.faden {{retraktionsfaden}}** gelegt. **Nachpraeparation {{zaehne}}.** **Erneute Abformung {{abformmaterial}}.** Prov mit **{{prov_zement}}** wdbf.\n\n{{behandler}}"
+    },
+
+    "wiedereingliederung": {
+      "bezeichnung": "Wiedereingliederung Krone/Teilkrone/Einlagefuellung (GOZ 2310, ggf. + 2197)",
+      "erkennung": {
+        "goz": ["2310", "2197"],
+        "bema": [],
+        "kuerzel": ["einsk"]
+      },
+      "material_slots": [
+        { "kategorie": "anaesthetikum", "frage": "Anaesthetikum?", "optional": true },
+        { "kategorie": "befestigungszement", "frage": "Befestigungsmaterial?" }
+      ],
+      "farbe_abfragen": false,
+      "trockenlegung_abfragen": "Trockenlegung (Watterollen + Absaugung / Kofferdam)?",
+      "vorlage": "{{datum}}\n\n{{zahn}}: {{beratung_untersuchung}}{{belagsentfernung_satz}}{{trockenlegung_satz}}Wiedereingliederung {{restauration}} mit {{befestigungszement}}{{erschwernis}}. Zementueberschuesse entfernt. Kontrolle stat. + dyn. Okklusion o.B.\n\n{{behandler}}"
     },
 
     "endo": {
